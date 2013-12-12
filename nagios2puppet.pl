@@ -68,7 +68,10 @@ sub get_title {
     my $max = $ndx + 5;
     my $title;
     foreach (@lines[$ndx..$max]) {      # Search the next few lines for the value we want as the title
-        $title = $1 if m/^\t$title_keyword\s+(\S.*)$/;
+        if (m/^\t$title_keyword\s+(\S.*)$/) {
+            $title = $1;
+            last;
+        }
     }
     return $title;
 }
