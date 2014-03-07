@@ -4,7 +4,7 @@
 # into comparable puppet declarations using puppet's nagios module
 
 use strict;
-#use warnings;
+use warnings;
 
 use Carp;
 use Data::Dumper;
@@ -47,18 +47,19 @@ sub get_str {
     my $line = shift;
 
     $line =~ s/'/"/g;   # Make sure we are using double quotes before adding single quotes to values
-    $line =~ s/define /nagios_/;    # Replace nagios define with puppet nagios_
-    if ($line =~ m/(^\tuse)/) {
-        $line =~ s/^\t(\w+)(\s+)(\S.*)$/\t$1\t\t\t=> '$3',/g;   # generate quoted key/values with big arrow
-    } elsif ($line =~ m/(^\thost_name|^\tcheck_command|^\tregister)/) {
-        $line =~ s/^\t(\w+)(\s+)(\S.*)$/\t$1\t\t=> '$3',/g;
+    if ($line =~ m/^\s*define /) {
+        $line =~ s/define /nagios_/;    # Replace nagios define with puppet nagios_
+    } elsif ($line =~ m/(^\s*use)/) {
+        $line =~ s/^\s*(\w+)(\s+)(\S.*)$/\t$1\t\t\t=> '$3',/g;   # generate quoted key/values with big arrow
+    } elsif ($line =~ m/(^\s*host_name\s*|^\s*check_command\s*|^\s*register\s*)/) {
+        $line =~ s/^\s*(\w+)(\s+)(\S.*)$/\t$1\t\t=> '$3',/g;
     } else {
-        $line =~ s/^\t(\w+)(\s+)(\S.*)$/\t$1\t=> '$3',/g;
+        $line =~ s/^\s*(\w+)(\s+)(\S.*)$/\t$1\t=> '$3',/g;
     }
     $line =~ s/\}/\}\n/;
     if ($line =~ m/nagios_/) {
         my $title = get_title($ndx);
-        $line =~ s/\{$/\{'$title':/;
+        $line =~ s/\{/\{'$title':/;
     }
     return $line;
 }
@@ -68,10 +69,7 @@ sub get_title {
     my $max = $ndx + 5;
     my $title;
     foreach (@lines[$ndx..$max]) {      # Search the next few lines for the value we want as the title
-        if (m/^\t$title_keyword\s+(\S.*)$/) {
-            $title = $1;
-            last;
-        }
+        $title = $1 if m/^\s*$title_keyword\s*(\S.*)$/;
     }
     return $title;
 }
